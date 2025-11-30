@@ -1,0 +1,2127 @@
+{
+  "name": "EasyJob Data For Airtable V1",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "app15DI6Iu0aq3QbF",
+          "mode": "list",
+          "cachedResultName": "CRM System",
+          "cachedResultUrl": "https://airtable.com/app15DI6Iu0aq3QbF"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblDtnYARFMA6Tmqy",
+          "mode": "list",
+          "cachedResultName": "project",
+          "cachedResultUrl": "https://airtable.com/app15DI6Iu0aq3QbF/tblDtnYARFMA6Tmqy"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Project.ID": "={{ $json.ProjectID }}",
+            "Project.Numbe": "={{ $json.ProjectNumber }}",
+            "Company.ID": "={{ $json.CompanyID }}",
+            "Company.Name": "={{ $json.CompanyName }}",
+            "Customer.Number": "={{ $json.CustomerNumber }}",
+            "Costplan.RentalPriceSumInc": "={{ $json.RentalPriceSumInc }}",
+            "DayTimeIn": "={{ $json.DayTimeIn }}",
+            "DayTimeOut": "={{ $json.DayTimeOut }}",
+            "Job.ID": "={{ $json.JobID }}"
+          },
+          "matchingColumns": [
+            "Job.ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Project.ID",
+              "displayName": "Project.ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Project.Numbe",
+              "displayName": "Project.Numbe",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Job.ID",
+              "displayName": "Job.ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Company.ID",
+              "displayName": "Company.ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Company.Name",
+              "displayName": "Company.Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer.Number",
+              "displayName": "Customer.Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Costplan.RentalPriceSumInc",
+              "displayName": "Costplan.RentalPriceSumInc",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "DayTimeIn",
+              "displayName": "DayTimeIn",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "DayTimeOut",
+              "displayName": "DayTimeOut",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Attachment Summary",
+              "displayName": "Attachment Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true,
+          "updateAllMatches": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1200,
+        624
+      ],
+      "id": "43400b96-1c1e-4346-a92f-3805ed8283ca",
+      "name": "Create or update a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "c205Wg2ah4O28YiY",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node code\nconst items = $input.all();\nconst results = [];\n\n// helper to get first non-empty value from list of potential keys\nfunction firstDefined(...vals) {\n  for (const v of vals) {\n    if (v !== undefined && v !== null && v !== '') return v;\n  }\n  return null;\n}\n\nitems.forEach((item, idx) => {\n  const data = item.json || {};\n  const project = data.project || {};\n  const company = data.company || {};\n  const contact = data.contact || {};\n\n  // Defensive: if no jobs, still optionally create a project-level record (optional)\n  if (!project.jobs || project.jobs.length === 0) {\n    // If you want project-level rows even without jobs, uncomment and adapt below:\n    // results.push({ json: { ProjectID: project.id ? String(project.id) : '', ... }});\n    return;\n  }\n\n  project.jobs.forEach(jobItem => {\n    // jobItem is the job object in the \"jobs\" array\n    const costplan = jobItem.costplan || {};\n    const details = jobItem.details || {};\n    const delivery = details.Address_Delivery || {};\n\n    // Find JobID from possible locations\n    const jobIdRaw = firstDefined(\n      jobItem.id,\n      details?.IdJob,\n      details?.ID,\n      details?.id,\n      details?.IdJob // repeated just in case of different casing\n    );\n\n    // Find ProjectID from possible locations\n    const projectIdRaw = firstDefined(\n      project.id,\n      details?.Project?.ID,\n      details?.Project?.IdProject,\n      details?.Project?.IdProject // fallback duplicates ok\n    );\n\n    // CustomerNumber: try delivery.Number, then company.customerNumber, then delivery.IdAddress etc.\n    const customerNumberRaw = firstDefined(\n      delivery?.Number,\n      company?.customerNumber,\n      delivery?.IdAddress,\n      delivery?.ID\n    );\n\n    // Fields with fallback priority (delivery address preferred)\n    const companyName = firstDefined(delivery?.Company, company?.name, '');\n    const city = firstDefined(delivery?.City, company?.address?.city, company?.address?.City, '');\n    const street = firstDefined(delivery?.Street, company?.address?.street, company?.address?.Street, '');\n    const zip = firstDefined(delivery?.Zip, company?.address?.zip, company?.address?.Zip, '');\n    const country = firstDefined(delivery?.Country?.Caption, company?.address?.country, company?.address?.Country, '');\n    const phone = firstDefined(delivery?.Phone, company?.phone, contact?.phone, '');\n    const email = firstDefined(delivery?.EMail, company?.email, contact?.email, '');\n\n    // Job number / caption (different possible keys)\n    const jobNumberRaw = firstDefined(details?.Number, jobItem.number, details?.number, jobItem.number);\n    const jobCaption = firstDefined(details?.Caption, jobItem.caption, '');\n\n    // Dates - ensure valid Date strings or null\n    let dayTimeOutISO = null;\n    let dayTimeInISO = null;\n    const rawOut = firstDefined(details?.DayTimeOut, details?.DayTimeOut, jobItem.details?.DayTimeOut);\n    const rawIn = firstDefined(details?.DayTimeIn, details?.DayTimeIn, jobItem.details?.DayTimeIn);\n    try { dayTimeOutISO = rawOut ? new Date(rawOut).toISOString() : null; } catch(e) { dayTimeOutISO = null; }\n    try { dayTimeInISO = rawIn ? new Date(rawIn).toISOString() : null; } catch(e) { dayTimeInISO = null; }\n\n    // Financials\n    const rentalPriceSumInc = costplan?.RentalPriceSumInc != null ? Number(costplan.RentalPriceSumInc) : 0;\n    const income = costplan?.Income != null ? Number(costplan.Income) : null;\n    const expensePlan = costplan?.ExpensePlan != null ? Number(costplan.ExpensePlan) : null;\n    const resultVal = costplan?.Result != null ? Number(costplan.Result) : null;\n\n    // Ensure string types for IDs (or empty string)\n    const CompanyID = company?.id ? String(company.id) : '';\n    const ProjectID = projectIdRaw ? String(projectIdRaw) : (project.id ? String(project.id) : '');\n    const JobID = jobIdRaw ? String(jobIdRaw) : (jobItem.id ? String(jobItem.id) : '');\n    const CustomerNumber = customerNumberRaw ? String(customerNumberRaw) : '';\n\n    // UniqueSyncID: company_project_job - safe fallback values used\n    const uniqueSync = `${CompanyID || 'noCompany'}_${ProjectID || 'noProject'}_${JobID || 'noJob'}`;\n\n    results.push({\n      json: {\n        // Company / delivery prioritized\n        CompanyID,\n        CompanyName: companyName,\n        City: city,\n        Street: street,\n        ZIP: zip,\n        Country: country,\n        Phone: phone,\n        Email: email,\n        Website: company?.website || '',\n\n        // Customer\n        CustomerNumber,\n\n        // Project\n        ProjectID,\n        ProjectNumber: project?.number || '',\n\n        // Job\n        JobID,\n        JobNumber: jobNumberRaw || '',\n        JobCaption: jobCaption,\n        DayTimeOut: dayTimeOutISO,\n        DayTimeIn: dayTimeInISO,\n        JobStatus: details?.JobState?.Caption || '',\n\n        // Financials\n        RentalPriceSumInc: rentalPriceSumInc,\n        Income: income,\n        ExpensePlan: expensePlan,\n        Result: resultVal,\n\n        // Meta\n        UniqueSyncID: uniqueSync,\n        LastSyncDate: new Date().toISOString(),\n        RecordSource: 'n8n'\n      }\n    });\n  });\n});\n\n// Debug: print first processed item structure so you can inspect in n8n execution log\nif (results.length > 0) {\n  console.log('SAMPLE OUTPUT:', JSON.stringify(results[0].json, null, 2));\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        640
+      ],
+      "id": "94444db1-42b9-4bb3-96bb-49488b1e1fe1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "batchSize": 20,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        784,
+        640
+      ],
+      "id": "3aa8a395-fccc-4c13-a0c4-33df27163ded",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst companyMap = {};\nconst now = new Date();\nconst last12Months = new Date();\nlast12Months.setFullYear(now.getFullYear() - 1);\n\nfunction formatDate(date) {\n  if (!date) return null;\n  const d = new Date(date);\n  return d.toISOString().split('T')[0]; // YYYY-MM-DD\n}\n\n// Helper: sanitize string for Brevo (alphanumeric + underscore)\nfunction sanitize(str) {\n  if (!str) return '';\n  return String(str).replace(/[^a-zA-Z0-9_]/g, '_');\n}\n\nitems.forEach(item => {\n  const data = item.json;\n  const project = data.project;\n  const company = data.company;\n\n  if (!company || !project) return;\n\n  const companyId = sanitize(company.id || company.name); // sanitize ID/Name\n\n  if (!companyMap[companyId]) {\n    companyMap[companyId] = {\n      CompanyID: companyId,\n      CompanyName: sanitize(company.name),\n      City: sanitize(company.address?.city),\n      Country: sanitize(company.address?.country),\n      Email: company.email || '',\n      Phone: company.phone || '',\n      Website: company.website || '',\n      total_revenue_lifetime: 0,\n      revenue_last_12_months: 0,\n      project_count_lifetime: new Set(),\n      project_count_last_12_months: new Set(),\n      first_project_date: null,\n      last_project_date: null,\n      marketing_opt_in: company.marketing_opt_in || false,\n      UniqueSyncID: sanitize(`${companyId}_sync`),\n      RecordSource: 'n8n',\n      LastSyncDate: formatDate(now)\n    };\n  }\n\n  const companyData = companyMap[companyId];\n\n  if (project.jobs && project.jobs.length > 0) {\n    project.jobs.forEach(jobItem => {\n      const job = jobItem.details;\n      const costplan = jobItem.costplan || {};\n      const rental = Number(costplan.RentalPriceSumInc || 0);\n      const jobDate = job?.DayTimeOut ? new Date(job.DayTimeOut) : null;\n\n      companyData.total_revenue_lifetime += rental;\n\n      if (jobDate && jobDate >= last12Months) {\n        companyData.revenue_last_12_months += rental;\n      }\n\n      if (project.number) {\n        companyData.project_count_lifetime.add(project.number);\n        if (jobDate && jobDate >= last12Months) {\n          companyData.project_count_last_12_months.add(project.number);\n        }\n      }\n\n      if (jobDate) {\n        if (!companyData.first_project_date || jobDate < new Date(companyData.first_project_date)) {\n          companyData.first_project_date = formatDate(jobDate);\n        }\n        if (!companyData.last_project_date || jobDate > new Date(companyData.last_project_date)) {\n          companyData.last_project_date = formatDate(jobDate);\n        }\n      }\n    });\n  }\n});\n\n// تحويل البيانات للـ Airtable + تحديد BrevoList\nconst results = Object.values(companyMap).map(c => {\n  const lastProjectDate = c.last_project_date ? new Date(c.last_project_date) : null;\n  let activity_status = 'Inactive';\n  if (lastProjectDate) {\n    const oneMonthAgo = new Date();\n    oneMonthAgo.setMonth(now.getMonth() - 1);\n    if (lastProjectDate >= oneMonthAgo) activity_status = 'New';\n    else if (lastProjectDate >= last12Months) activity_status = 'Active';\n  }\n\n  // تحديد Brevo List حسب النشاط وحالة التسويق\n  let BrevoList = '';\n  if (c.marketing_opt_in) {\n    if (activity_status === 'New') BrevoList = 'New_Leads';\n    else if (activity_status === 'Active') BrevoList = 'Active_Customers';\n    else BrevoList = 'Inactive_Customers';\n  }\n\n  return {\n    json: {\n      CompanyID: c.CompanyID,\n      CompanyName: c.CompanyName,\n      City: c.City,\n      Country: c.Country,\n      Email: c.Email,\n      Phone: c.Phone,\n      Website: c.Website,\n      total_revenue_lifetime: Number(c.total_revenue_lifetime.toFixed(2)),\n      revenue_last_12_months: Number(c.revenue_last_12_months.toFixed(2)),\n      project_count_lifetime: c.project_count_lifetime.size,\n      project_count_last_12_months: c.project_count_last_12_months.size,\n      first_project_date: c.first_project_date,\n      last_project_date: c.last_project_date,\n      activity_status,\n      marketing_opt_in: c.marketing_opt_in,\n      BrevoList,\n      UniqueSyncID: c.UniqueSyncID,\n      RecordSource: c.RecordSource,\n      LastSyncDate: c.LastSyncDate\n    }\n  };\n});\n\nreturn results;\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        1216
+      ],
+      "id": "b05f91ef-697c-4bb7-a2d1-7e9e636a24ee",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "batchSize": 20,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        848,
+        1216
+      ],
+      "id": "2800f212-e6b2-4343-b2f1-e0007a17e2c8",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "app15DI6Iu0aq3QbF",
+          "mode": "list",
+          "cachedResultName": "CRM System",
+          "cachedResultUrl": "https://airtable.com/app15DI6Iu0aq3QbF"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl71xff1vfqFC7ci",
+          "mode": "list",
+          "cachedResultName": "Companies",
+          "cachedResultUrl": "https://airtable.com/app15DI6Iu0aq3QbF/tbl71xff1vfqFC7ci"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Total Revenue (12M)": "={{ $json.revenue_last_12_months }}",
+            "Total Revenue (Lifetime)": "={{ $json.total_revenue_lifetime }}",
+            "project count last 12 months": "={{ $json.project_count_last_12_months }}",
+            "project count lifetime": "={{ $json.project_count_lifetime }}",
+            "Easyjob ID": "={{ $json.CompanyID }}",
+            "Company Name": "={{ $json.CompanyName }}",
+            "City": "={{ $json.City }}",
+            "Country": "={{ $json.Country }}",
+            "Last Sync Date": "={{ $json.LastSyncDate }}",
+            "Activity Status": "={{ $json.activity_status }}",
+            "First Project Date": "={{ $json.first_project_date }}",
+            "Last Project Date": "={{ $json.last_project_date }}",
+            "Unique Sync ID": "={{ $json.UniqueSyncID }}",
+            "Company ID": "={{ $json.CompanyID }}",
+            "Record Source": "={{ $json.RecordSource }}",
+            "Email": "={{ $json.Email }}",
+            "Phone Number": "={{ $json.Phone }}",
+            "Website": "={{ $json.Website }}",
+            "ListTag": "={{ $json.BrevoList }}"
+          },
+          "matchingColumns": [
+            "Easyjob ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Easyjob ID",
+              "displayName": "Easyjob ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Activity Status",
+              "displayName": "Activity Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Active",
+                  "value": "Active"
+                },
+                {
+                  "name": "Inactive",
+                  "value": "Inactive"
+                },
+                {
+                  "name": "Potential",
+                  "value": "Potential"
+                },
+                {
+                  "name": "VIP",
+                  "value": "VIP"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "City",
+              "displayName": "City",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Country",
+              "displayName": "Country",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Total Revenue (12M)",
+              "displayName": "Total Revenue (12M)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Total Revenue (Lifetime)",
+              "displayName": "Total Revenue (Lifetime)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Record Source",
+              "displayName": "Record Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Sync Date",
+              "displayName": "Last Sync Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Unique Sync ID",
+              "displayName": "Unique Sync ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Company ID",
+              "displayName": "Company ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project count lifetime",
+              "displayName": "project count lifetime",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project count last 12 months",
+              "displayName": "project count last 12 months",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "First Project Date",
+              "displayName": "First Project Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Project Date",
+              "displayName": "Last Project Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Marketing_Opt_In",
+              "displayName": "Marketing_Opt_In",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ListTag",
+              "displayName": "ListTag",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Modified",
+              "displayName": "Last Modified",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true,
+          "updateAllMatches": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1632,
+        1200
+      ],
+      "id": "62fe6234-06b5-48a2-8b5c-de9dd23a7949",
+      "name": "Create or update a record1",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "c205Wg2ah4O28YiY",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// نفترض إن array النتائج بتاعت الشركات بعد upsert موجودة في items\nconst items = $input.all(); // كل الريكوردات اللي اتعملها upsert\nconst recordsUpdated = items.length; // عدد الريكوردات اللي اتعمل لها upsert\n\n// تجهيز الـ log للـ Airtable\nconst syncLog = [\n  {\n    json: {\n      \"Run ID\": $workflow.runId,           // ID التشغيل الحالي\n      \"Date\": new Date().toISOString(),    // الوقت الحالي\n      \"Source\": \"n8n\",                     // ثابت\n      \"Status\": \"Success\",                  // ممكن تعدل لو فيه error\n      \"Records Updated\": recordsUpdated,   \n      \"Log File URL\": \"\"                    // \n    }\n  }\n];\n\nreturn syncLog;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        1200
+      ],
+      "id": "7d7dba19-d96d-4409-a2cf-404968b5bbbe",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst contactMap = {};\nconst now = new Date();\nconst last12Months = new Date();\nlast12Months.setFullYear(now.getFullYear() - 1);\n\nfunction formatDate(date) {\n  if (!date) return null;\n  const d = new Date(date);\n  return d.toISOString().split('T')[0]; // YYYY-MM-DD\n}\n\nitems.forEach(item => {\n  const data = item.json;\n  const project = data.project;\n  const company = data.company;\n  const contact = data.contact;\n\n  if (!company || !contact) return;\n\n  const companyId = String(company.id || company.name);\n  const contactId = String(contact.id);\n\n  if (!contactMap[contactId]) {\n\n    // تحديد آخر تاريخ مشروع\n    const lastProjectDate = project.jobs && project.jobs.length > 0 \n      ? new Date(project.jobs[project.jobs.length - 1].details.DayTimeOut) \n      : null;\n\n    // Mapping Activity Status لـ Airtable\n    let activity_status = 'Keine Reaktion';\n    if (lastProjectDate) {\n      const oneMonthAgo = new Date();\n      oneMonthAgo.setMonth(now.getMonth() - 1);\n      if (lastProjectDate >= oneMonthAgo) activity_status = 'Aktiv';\n      else if (lastProjectDate >= last12Months) activity_status = 'Inaktiv';\n    }\n\n    // Brevo subscription حسب النشاط وحالة marketing_opt_in\n    let BrevoList = '';\n    const marketing_opt_in = !!company.marketing_opt_in;\n    if (marketing_opt_in) {\n      if (activity_status === 'Aktiv') BrevoList = 'New Leads';\n      else if (activity_status === 'Inaktiv') BrevoList = 'Active Customers';\n      else BrevoList = 'Inactive Customers';\n    }\n\n    // تحديد Source بشكل ذكي\n    let source = 'Easyjob'; // default\n    if (contact.source && ['Easyjob', 'Website', 'Dripify', 'Messe'].includes(contact.source)) {\n      source = contact.source;\n    }\n\n    contactMap[contactId] = {\n      \"full name\": contact.full_name || '',\n      email: contact.email || company.email || '',\n      phone: contact.mobile || contact.phone_private || contact.phone || '',\n      company: company.name || '',\n      role: contact.job_title || '',\n      \"contact type\": '',\n      \"contact owner\": '',\n      \"contact status\": '',\n      \"opt-in marketing\": marketing_opt_in,\n      \"last contact date\": '',\n      \"brevo subscription\": BrevoList,\n      source: source,\n      tags: '',\n      \"activity status\": activity_status,\n      \"contact id\": contactId,\n      \"n8n link\": '',\n      \"unique sync id\": `${contactId}_sync`,\n      companies: companyId,\n      notes: ''\n    };\n  }\n});\n\nreturn Object.values(contactMap).map(c => ({ json: c }));\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        912
+      ],
+      "id": "b3a15fab-f1cd-4f2b-981c-f03d18fc2e15",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "batchSize": 20,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        784,
+        912
+      ],
+      "id": "52365151-dafe-4b44-af30-0aae2f063083",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "app15DI6Iu0aq3QbF",
+          "mode": "list",
+          "cachedResultName": "CRM System",
+          "cachedResultUrl": "https://airtable.com/app15DI6Iu0aq3QbF"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblkJRmgUGR7Zo7qs",
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "https://airtable.com/app15DI6Iu0aq3QbF/tblkJRmgUGR7Zo7qs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Opt-in Marketing": "={{ $json['opt-in marketing'] }}",
+            "Full Name": "={{ $json['full name'] }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.phone }}",
+            "Company": "={{ $json.company }}",
+            "Role": "={{ $json.role }}",
+            "Notes": "={{ $json.notes }}",
+            "Unique Sync ID": "={{ $json['unique sync id'] }}",
+            "Companies": "={{ $json.companies }}",
+            "Contact ID": "={{ $json['contact id'] }}",
+            "Activity Status": "={{ $json['activity status'] }}",
+            "Source": "={{ $json.source }}"
+          },
+          "matchingColumns": [
+            "Full Name",
+            "Contact ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Contact Type",
+              "displayName": "Contact Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Decision Maker",
+                  "value": "Decision Maker"
+                },
+                {
+                  "name": "Purchasing",
+                  "value": "Purchasing"
+                },
+                {
+                  "name": "Accounting",
+                  "value": "Accounting"
+                },
+                {
+                  "name": "Other",
+                  "value": "Other"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Contact Owner",
+              "displayName": "Contact Owner",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Jelena",
+                  "value": "Jelena"
+                },
+                {
+                  "name": "Samanta",
+                  "value": "Samanta"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Contact Status",
+              "displayName": "Contact Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Active",
+                  "value": "Active"
+                },
+                {
+                  "name": "Inactive",
+                  "value": "Inactive"
+                },
+                {
+                  "name": "Unreachable",
+                  "value": "Unreachable"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Opt-in Marketing",
+              "displayName": "Opt-in Marketing",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Contact Date",
+              "displayName": "Last Contact Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Unique Sync ID",
+              "displayName": "Unique Sync ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "n8n Link",
+              "displayName": "n8n Link",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Activities",
+              "displayName": "Activities",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Companies",
+              "displayName": "Companies",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Contact ID",
+              "displayName": "Contact ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Role / Title",
+              "displayName": "Role / Title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Activity Status",
+              "displayName": "Activity Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Aktiv",
+                  "value": "Aktiv"
+                },
+                {
+                  "name": "Inaktiv",
+                  "value": "Inaktiv"
+                },
+                {
+                  "name": "Keine Reaktion",
+                  "value": "Keine Reaktion"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Brevo Subscription",
+              "displayName": "Brevo Subscription",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Tags",
+              "displayName": "Tags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "options": [
+                {
+                  "name": "Newsletter",
+                  "value": "Newsletter"
+                },
+                {
+                  "name": "Kunde",
+                  "value": "Kunde"
+                },
+                {
+                  "name": "Lieferant",
+                  "value": "Lieferant"
+                },
+                {
+                  "name": "VIP",
+                  "value": "VIP"
+                },
+                {
+                  "name": "Partner",
+                  "value": "Partner"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Easyjob",
+                  "value": "Easyjob"
+                },
+                {
+                  "name": "Website",
+                  "value": "Website"
+                },
+                {
+                  "name": "Dripify",
+                  "value": "Dripify"
+                },
+                {
+                  "name": "Messe",
+                  "value": "Messe"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aktivitäten",
+              "displayName": "Aktivitäten",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1056,
+        896
+      ],
+      "id": "c5e46bc6-9dfc-48f2-90e0-05d00cd29b2b",
+      "name": "Create or update a record2",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "c205Wg2ah4O28YiY",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "upsertAttributes": {
+          "upsertAttributesValues": [
+            {
+              "fieldName": "ACTIVITY_STATUS",
+              "fieldValue": "={{ $json.activity_status }}"
+            },
+            {
+              "fieldName": "COMPANY_NAME",
+              "fieldValue": "={{ $json.companyName }}"
+            }
+          ]
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.sendInBlue",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        1424
+      ],
+      "id": "14a02cfe-36e8-498f-b82d-f8ae33427049",
+      "name": "Upsert a contact",
+      "credentials": {
+        "sendInBlueApi": {
+          "id": "Go43qpfHWI7RI2DZ",
+          "name": "Brevo account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const validEmail = (email) => {\n  const regex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n  return regex.test(email);\n};\n\nreturn $input.all()\n  .filter(item => {\n    const email = item.json.contact?.email || item.json.company?.email;\n    return email && validEmail(email);\n  })\n  .map(item => {\n    const data = item.json;\n    \n    // استخراج البيانات من هيكل EasyJob\n    const company = data.company || {};\n    const contact = data.contact || {};\n    const project = data.project || {};\n    \n    // البيانات الأساسية\n    const email = contact.email || company.email;\n    const companyName = company.name || 'Unknown Company';\n    const phone = contact.mobile || contact.phone || company.phone || '';\n    const city = company.address?.city || '';\n    const country = company.address?.country || '';\n    \n    // بيانات المشروع للتصنيف\n    const lastProjectDate = project.end_date ? project.end_date.split('T')[0] : '';\n    const totalRevenue = project.jobs?.reduce((sum, job) => sum + (job.costplan?.Income || 0), 0) || 0;\n    const projectCount = project.jobs?.length || 0;\n    \n    // تحديد Brevo List ID\n    let listId = 10; // New Customers\n    let segment = 'New Customers';\n    \n    if (lastProjectDate) {\n      const lastProject = new Date(lastProjectDate);\n      const sixMonthsAgo = new Date();\n      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);\n      \n      if (lastProject >= sixMonthsAgo) {\n        listId = 12; // Active Customers\n        segment = 'Active Customers';\n      } else {\n        listId = 13; // Inactive Customers\n        segment = 'Inactive Customers';\n      }\n    }\n    \n    return {\n      json: {\n        // الحقول الأساسية\n        email: email,\n        firstName: contact.first_name || companyName,\n        companyName: companyName,\n        phone: phone,\n        country: country,\n        city: city,\n        \n        // للحقول الإضافية\n        activity_status: segment,\n        brevo_list_id: listId,\n        brevo_list_name: segment,\n        unique_sync_id: `ej_${company.id}_${Date.now()}`,\n        \n        // البيانات المالية\n        total_revenue: totalRevenue,\n        last_project_date: lastProjectDate,\n        project_count: projectCount,\n        \n        // معلومات إضافية\n        company_id: company.id,\n        contact_id: contact.id,\n        project_id: project.id,\n        source: 'EasyJob'\n      }\n    };\n  });"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        1552
+      ],
+      "id": "f1546612-3339-469f-93e3-340501b99264",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        784,
+        1584
+      ],
+      "id": "f63a85cf-75a5-4f71-a63d-5a41b2b9395a",
+      "name": "Loop Over Items3"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        1648
+      ],
+      "id": "50fd6a1e-0e57-44e1-855b-9570d62d1671",
+      "name": "Wait",
+      "webhookId": "e1b89841-8982-4b0b-92dd-d0a670f98e66"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/contacts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "sendInBlueApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email\": \"{{ $json.email }}\",\n  \"updateEnabled\": true,\n  \"attributes\": {\n    \"FIRSTNAME\": \"{{ $json.firstName }}\",\n    \"COMPANY\": \"{{ $json.companyName }}\",\n    \"PHONE\": \"{{ $json.phone }}\",\n    \"COUNTRY\": \"{{ $json.country }}\",\n    \"CITY\": \"{{ $json.city }}\",\n    \"STATUS\": \"{{ $json.activity_status }}\",\n    \"UNIQUE_SYNC_ID\": \"{{ $json.unique_sync_id }}\",\n    \"TOTAL_REVENUE\": {{ $json.total_revenue }},\n    \"LAST_PROJECT_DATE\": \"{{ $json.last_project_date }}\",\n    \"PROJECT_COUNT\": {{ $json.project_count }},\n    \"SEGMENT\": \"{{ $json.brevo_list_name }}\",\n    \"COMPANY_ID\": \"{{ $json.company_id }}\",\n    \"CONTACT_ID\": \"{{ $json.contact_id }}\",\n    \"PROJECT_ID\": \"{{ $json.project_id }}\",\n    \"SOURCE\": \"{{ $json.source }}\"\n  },\n  \"listIds\": [{{ $json.brevo_list_id }}]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1280,
+        1616
+      ],
+      "id": "253988c3-1c57-4235-92de-8b758411ea0b",
+      "name": "HTTP Request",
+      "credentials": {
+        "sendInBlueApi": {
+          "id": "Go43qpfHWI7RI2DZ",
+          "name": "Brevo account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "email",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        1472
+      ],
+      "id": "99d3170c-73d0-4acf-8c36-6f7746c08ea0",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize with monthly chunks - MATCH PHP LOGIC EXACTLY\nconst token = $('Store Token4').first().json.access_token;\n\nfunction createMonthlyChunks(startDate, endDate) {\n  const start = new Date(startDate);\n  const end = new Date(endDate);\n  const chunks = [];\n  \n  let current = new Date(start);\n  \n  while (current <= end) {\n    const chunkEnd = new Date(current);\n    chunkEnd.setMonth(chunkEnd.getMonth() + 1);\n    \n    // PHP equivalent: if ($chunkEnd > $end) $chunkEnd = clone $end;\n    if (chunkEnd > end) {\n      chunkEnd.setTime(end.getTime());\n    }\n    \n    chunks.push({\n      start: current.toISOString().split('T')[0],\n      end: chunkEnd.toISOString().split('T')[0],\n      chunkType: 'month'\n    });\n    \n    // PHP equivalent: $current = clone $chunkEnd; $current->modify('+1 second');\n    current = new Date(chunkEnd);\n    current.setSeconds(current.getSeconds() + 1);\n  }\n  \n  return chunks;\n}\n\nconst monthlyChunks = createMonthlyChunks('2025-07-01', '2025-12-31');\n\nconsole.log('=== MONTHLY CHUNKS (PHP-style) ===');\nmonthlyChunks.forEach((chunk, idx) => {\n  console.log(`${idx + 1}. ${chunk.start} → ${chunk.end}`);\n});\n\nreturn [{\n  json: {\n    access_token: token,\n    chunksToProcess: monthlyChunks,\n    allProjects: [],\n    currentIndex: 0\n  }\n}];"
+      },
+      "id": "7bd8d1f9-1363-4d71-b695-0fb86553693a",
+      "name": "Initialize Chunks3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -3120,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Get current state\nconst state = $input.first().json;\nconst { access_token, chunksToProcess, allProjects, currentIndex } = state;\n\n// Check if we're done\nif (currentIndex >= chunksToProcess.length) {\n  return [{\n    json: {\n      access_token: access_token,\n      allProjects: allProjects,\n      completed: true,\n      totalProjects: allProjects.length\n    }\n  }];\n}\n\n// Get current chunk to process\nconst currentChunk = chunksToProcess[currentIndex];\n\nreturn [{\n  json: {\n    access_token: access_token,\n    chunksToProcess: chunksToProcess,\n    allProjects: allProjects,\n    currentIndex: currentIndex,\n    currentChunk: currentChunk\n  }\n}];"
+      },
+      "id": "25cd5a01-8b0d-4b7d-95e6-be7d5daf1903",
+      "name": "Get Next Chunk3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -2896,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.completed }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "6dfec179-3122-4de7-9c4c-0d7d359518e7",
+      "name": "Check If Complete3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2672,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://nftqsfdcq9bdubni.myfritz.net:8008/api.json/projects/list",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "style",
+              "value": "List"
+            },
+            {
+              "name": "startdate",
+              "value": "={{ $json.currentChunk.start }}"
+            },
+            {
+              "name": "enddate",
+              "value": "={{ $json.currentChunk.end }}"
+            },
+            {
+              "name": "searchtext"
+            },
+            {
+              "name": "IdUserFilter",
+              "value": "0"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "51acf53f-104f-4ad1-801e-8069031ada84",
+      "name": "Fetch Projects3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -2464,
+        784
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process the API response\nconst items = $input.all();\nconst state = $node['Get Next Chunk3'].json;\nconst currentChunk = state.currentChunk;\n\nconsole.log(`Chunk ${currentChunk.start} → ${currentChunk.end} (${currentChunk.chunkType})`);\n\n// Extract projects from response\nlet projects = [];\n\nif (items.length > 0) {\n  const firstItem = items[0].json;\n  \n  if (Array.isArray(firstItem)) {\n    projects = firstItem;\n  } else if (items.length === 1 && firstItem.data && Array.isArray(firstItem.data)) {\n    projects = firstItem.data;\n  } else {\n    projects = items.map(item => item.json);\n  }\n}\n\nconst projectCount = projects.length;\nconsole.log(`  → Found ${projectCount} projects`);\n\n// Match PHP: check if >= 50 and not at day level\nconst needsSubChunking = projectCount >= 50 && currentChunk.chunkType !== 'day';\n\nif (needsSubChunking) {\n  console.log(`  ⚠️ 50+ projects, will sub-chunk`);\n}\n\nreturn [{\n  json: {\n    ...state,\n    currentProjects: projects,\n    projectCount: projectCount,\n    needsSubChunking: needsSubChunking\n  }\n}];"
+      },
+      "id": "c2e5b5f3-288d-4751-a250-6f6acad89356",
+      "name": "Process Response3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.needsSubChunking }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "7653e7b3-6a0d-4cb1-81c3-313cad4382ae",
+      "name": "Needs Sub-Chunking?3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2016,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Create sub-chunks - MATCH PHP LOGIC EXACTLY\nconst state = $input.first().json;\nconst currentChunk = state.currentChunk;\n\nfunction createSubChunks(start, end, currentType) {\n  const startDate = new Date(start);\n  const endDate = new Date(end);\n  const chunks = [];\n  \n  const nextType = currentType === 'month' ? 'week' : 'day';\n  \n  let current = new Date(startDate);\n  \n  while (current <= endDate) {\n    const chunkEnd = new Date(current);\n    \n    // PHP: $chunkEnd->modify('+1 week') or $chunkEnd->modify('+1 day')\n    if (nextType === 'week') {\n      chunkEnd.setDate(chunkEnd.getDate() + 7);\n    } else {\n      chunkEnd.setDate(chunkEnd.getDate() + 1);\n    }\n    \n    // PHP: if ($chunkEnd > $end) $chunkEnd = clone $end;\n    if (chunkEnd > endDate) {\n      chunkEnd.setTime(endDate.getTime());\n    }\n    \n    chunks.push({\n      start: current.toISOString().split('T')[0],\n      end: chunkEnd.toISOString().split('T')[0],\n      chunkType: nextType\n    });\n    \n    // PHP: $current = clone $chunkEnd; $current->modify('+1 second');\n    current = new Date(chunkEnd);\n    current.setSeconds(current.getSeconds() + 1);\n  }\n  \n  return chunks;\n}\n\nconst subChunks = createSubChunks(\n  currentChunk.start,\n  currentChunk.end,\n  currentChunk.chunkType\n);\n\nconsole.log(`=== SPLIT ${currentChunk.chunkType}: ${currentChunk.start} → ${currentChunk.end} ===`);\nconsole.log(`Into ${subChunks.length} ${subChunks[0]?.chunkType || 'chunks'}:`);\nsubChunks.forEach((chunk, idx) => {\n  console.log(`  ${idx + 1}. ${chunk.start} → ${chunk.end}`);\n});\n\nconst newChunksToProcess = [\n  ...state.chunksToProcess.slice(0, state.currentIndex),\n  ...subChunks,\n  ...state.chunksToProcess.slice(state.currentIndex + 1)\n];\n\nreturn [{\n  json: {\n    access_token: state.access_token,\n    chunksToProcess: newChunksToProcess,\n    allProjects: state.allProjects,\n    currentIndex: state.currentIndex\n  }\n}];"
+      },
+      "id": "43c15c86-565f-4714-a7cd-90bf9d6357a9",
+      "name": "Create Sub-Chunks3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Add projects to collection and move to next chunk\nconst state = $input.first().json;\n\nconst updatedProjects = [\n  ...state.allProjects,\n  ...state.currentProjects\n];\n\nconsole.log(`Total projects collected: ${updatedProjects.length}`);\n\nreturn [{\n  json: {\n    access_token: state.access_token,\n    chunksToProcess: state.chunksToProcess,\n    allProjects: updatedProjects,\n    currentIndex: state.currentIndex + 1\n  }\n}];"
+      },
+      "id": "07ff34fb-cdee-41a7-b5ff-8ff3c26770ad",
+      "name": "Add Projects to Collection3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Output collected projects with token for next stage\nconst finalData = $input.first().json;\n\nconsole.log(`=== COLLECTION COMPLETED ===`);\nconsole.log(`Total projects collected: ${finalData.totalProjects}`);\n\n// Output each project with access token attached\nreturn finalData.allProjects.map(project => ({\n  json: {\n    ...project,\n    access_token: finalData.access_token\n  }\n}));"
+      },
+      "id": "609c2c80-441b-4c38-a6ef-7fb5cd7d8f72",
+      "name": "Output Projects with Token2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -2464,
+        592
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5b77249d-2f73-4dc8-9059-fabc7d6a489d",
+      "name": "Cron Trigger4",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -3776,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://nftqsfdcq9bdubni.myfritz.net:8008/token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "ej-webapi-client",
+              "value": "ThirdParty"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "password"
+            },
+            {
+              "name": "username",
+              "value": "Sani"
+            },
+            {
+              "name": "password",
+              "value": "different1305"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6907ce4a-5660-4198-8c02-8a9e6e37e4f2",
+      "name": "Get EasyJob Token4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -3552,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const token = $input.first().json.access_token;\nreturn [{ json: { access_token: token } }];"
+      },
+      "id": "0017c9e0-e106-4331-953a-a37ec5aed076",
+      "name": "Store Token4",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -3344,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://nftqsfdcq9bdubni.myfritz.net:8008/api.json/projects/details",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $json.Id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7b20c609-1405-4e58-bfc0-67f08bf921fc",
+      "name": "Get Project Details3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1808,
+        592
+      ],
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract Company Data from Project - Process ALL items\nconst items = $input.all();\nconst inputItems = $('Remove Duplicate Projects').all(); // This has the original data WITH token\n\n// Process each project\nreturn items.map((item, index) => { // ← Added 'index' parameter\n  const project = item.json;\n  const originalInput = inputItems[index].json; // ← Use index to get corresponding input\n  const company = project.Address_Customer;\n  const contact = project.Contact_Customer;\n\n  let companyData = {\n    company_id: null,\n    company_name: 'No Company',\n    address: {},\n    phone: '',\n    email: '',\n    website: ''\n  };\n\n  if (company) {\n    companyData = {\n      company_id: company.ID,\n      company_name: company.Company || 'No Company Name',\n      address: {\n        street: company.Street,\n        street2: company.Street2,\n        zip: company.Zip,\n        city: company.City,\n        country: company.Country ? company.Country.Caption : ''\n      },\n      phone: company.Phone || company.PhoneCompany || '',\n      email: company.EMail,\n      website: company.WWWAdress\n    };\n  }\n\n  // Get contact ID - prioritize Contact_Customer, fallback to PrimaryContact\n  let contactId = null;\n  if (contact && contact.ID) {\n    contactId = contact.ID;\n  } else if (company && company.PrimaryContact && company.PrimaryContact.ID) {\n    contactId = company.PrimaryContact.ID;\n  }\n\n  return {\n    json: {\n      ...companyData,\n      company_contact_id: contactId,\n      project_id: project.IdProject,\n      project_number: project.Number,\n      project_name: project.Caption,\n      project_status: project.ProjectState ? (typeof project.ProjectState === 'string' ? project.ProjectState : project.ProjectState.Caption) : '',\n      start_date: project.StartDate,\n      end_date: project.EndDate,\n      jobs: project.Jobs || [],\n      access_token: originalInput.access_token // ← Now correctly gets token from input\n    }\n  };\n});"
+      },
+      "id": "c745d771-2dba-486b-b759-db8acd1ca68e",
+      "name": "Extract Company Data3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -1584,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Remove Duplicate Projects - Keep only unique records by ID\nconst items = $input.all();\n\n// Use a Map to track unique projects by ID\nconst uniqueProjects = new Map();\n\nitems.forEach(item => {\n  const project = item.json;\n  const projectId = project.Id;\n  \n  // Only add if we haven't seen this ID before\n  // This keeps the FIRST occurrence of each ID\n  // if (!uniqueProjects.has(projectId)) {\n  //   uniqueProjects.set(projectId, project);\n  // }\n  if (!uniqueProjects.has(projectId)) {\n    uniqueProjects.set(projectId, {\n      ...project,\n      access_token: project.access_token // Explicitly preserve token\n    });\n  }\n});\n\n// Convert Map back to array format\nconst results = Array.from(uniqueProjects.values()).map(project => ({\n  json: project\n}));\n\nconsole.log(`Original count: ${items.length}`);\nconsole.log(`Unique count: ${results.length}`);\nconsole.log(`Duplicates removed: ${items.length - results.length}`);\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2256,
+        592
+      ],
+      "id": "41bfdfec-bfe1-4e40-bad8-9335598aa7fc",
+      "name": "Remove Duplicate Projects"
+    },
+    {
+      "parameters": {
+        "batchSize": 20,
+        "options": {}
+      },
+      "id": "1a0b3e88-c963-4b3f-a222-9ceb29b7f322",
+      "name": "Batch Jobs Processing",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1456,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://nftqsfdcq9bdubni.myfritz.net:8008/api.json/contacts/details",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $json.company_contact_id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d06b72dc-1342-40c2-b6d7-d5076d954f73",
+      "name": "Get Contact Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1360,
+        592
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge Contact Details with Company Data - Improved Structure\nconst contactItems = $input.all();\nconst companyItems = $('Extract Company Data3').all();\n\nreturn contactItems.map((item, index) => {\n  const contactData = item.json;\n  const companyData = companyItems[index].json;\n  \n  // Check if contact data exists and is not empty\n  const hasContact = contactData && Object.keys(contactData).length > 0 && contactData.ID;\n  \n  // Build clean contact object\n  const contact = hasContact ? {\n    id: contactData.ID,\n    salutation: contactData.Salutation?.Caption || '',\n    first_name: contactData.FirstName || '',\n    middle_name: contactData.MiddleName || '',\n    last_name: contactData.Surname || '',\n    full_name: `${contactData.FirstName || ''} ${contactData.Surname || ''}`.trim(),\n    email: contactData.Email || '',\n    phone: contactData.Phone || '',\n    phone_private: contactData.PhonePrivate || '',\n    mobile: contactData.Mobile || '',\n    fax: contactData.Fax || '',\n    job_title: contactData.Jobname || ''\n  } : null;\n  \n  // Build clean company object\n  const companyAddress = companyData.company_address || companyData.address || {};\n  \n  const company = {\n    id: companyData.company_id,\n    name: companyData.company_name,\n    address: {\n      street: companyAddress.street || '',\n      street2: companyAddress.street2 || '',\n      zip: companyAddress.zip || '',\n      city: companyAddress.city || '',\n      country: companyAddress.country || ''\n    },\n    phone: companyData.company_phone || companyData.phone || '',\n    email: companyData.company_email || companyData.email || '',\n    website: companyData.company_website || companyData.website || ''\n  };\n  \n  // Build clean project object\n  const project = {\n    id: companyData.project_id,\n    number: companyData.project_number,\n    name: companyData.project_name,\n    status: companyData.project_status,\n    start_date: companyData.start_date,\n    end_date: companyData.end_date,\n    job_count: companyData.jobs?.length || 0,\n    jobs: companyData.jobs || []\n  };\n  \n  // Return clean merged structure\n  return {\n    json: {\n      project,\n      company,\n      contact,\n      access_token: companyData.access_token\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        592
+      ],
+      "id": "670220c3-cfdb-437a-81c2-ca075e5c75e6",
+      "name": "Merge Company and Contact Data1"
+    },
+    {
+      "parameters": {
+        "functionCode": "const items = $input.all();\nconst results = [];\n\nitems.forEach(item => {\n  const data = item.json;\n  const jobs = data.project?.jobs || [];\n  \n  // Create a separate item for each job\n  jobs.forEach(job => {\n    results.push({\n      json: {\n        job_id: job.IdJob || job.ID,\n        job_number: job.Number,\n        job_caption: job.Caption,\n        job_state_id: job.JobState?.ID,\n        stock_id: job.Stock?.ID,\n        stock_caption: job.Stock?.Caption,\n        // Keep reference to parent data\n        project_id: data.project.id,\n        company_id: data.company.id,\n        access_token: data.access_token,\n        // Store the original merged data for later\n        _original_data: data\n      }\n    });\n  });\n});\n\nreturn results;"
+      },
+      "id": "d4c93a84-9a85-4940-9273-1f94e230be9d",
+      "name": "Extract Jobs from Project",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://nftqsfdcq9bdubni.myfritz.net:8008/api.json/Jobs/Costplan",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $json.job_id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "790fed54-884c-4c3d-8f70-89096cccf5fc",
+      "name": "Get Job Costplan1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -512,
+        912
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "http://nftqsfdcq9bdubni.myfritz.net:8008/api.json/Jobs/Details",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $json.job_id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "36960352-7a9d-4786-ac98-657482f79011",
+      "name": "Get Job Details1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1120,
+        976
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const costplanItems = $input.all();\nconst jobsWithDetails = $('Store Job with Details2').all();\n\nreturn costplanItems.map((item, index) => {\n  const costplan = item.json;\n  const jobWithDetails = jobsWithDetails[index].json;\n  \n  return {\n    json: {\n      job_id: jobWithDetails.job_id,\n      job_number: jobWithDetails.job_number,\n      job_caption: jobWithDetails.job_caption,\n      job_state_id: jobWithDetails.job_state_id,\n      stock_id: jobWithDetails.stock_id,\n      stock_caption: jobWithDetails.stock_caption,\n      \n      // Job Details\n      job_details: jobWithDetails.job_details,\n      \n      // Job Costplan\n      job_costplan: costplan,\n      \n      // Parent references\n      project_id: jobWithDetails.project_id,\n      company_id: jobWithDetails.company_id,\n      access_token: jobWithDetails.access_token,\n      _original_data: jobWithDetails._original_data\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        1104
+      ],
+      "id": "5672edc3-b1d7-4b68-9527-264df09eeb7b",
+      "name": "Merge Job Details and Costplan2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobsWithDetails = $input.all();\n\n// Group jobs by project_id\nconst projectsMap = {};\n\njobsWithDetails.forEach(item => {\n  const data = item.json;\n  const projectId = data.project_id;\n  \n  if (!projectsMap[projectId]) {\n    projectsMap[projectId] = {\n      original: data._original_data,\n      jobs: []\n    };\n  }\n  \n  // Add enriched job data\n  projectsMap[projectId].jobs.push({\n    id: data.job_id,\n    number: data.job_number,\n    caption: data.job_caption,\n    state_id: data.job_state_id,\n    stock: {\n      id: data.stock_id,\n      caption: data.stock_caption\n    },\n    details: data.job_details,\n    costplan: data.job_costplan\n  });\n});\n\n// Reconstruct the final output\nreturn Object.values(projectsMap).map(project => {\n  const original = project.original;\n  \n  return {\n    json: {\n      project: {\n        ...original.project,\n        jobs: project.jobs // Replace with enriched jobs\n      },\n      company: original.company,\n      contact: original.contact,\n      access_token: original.access_token\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        1072
+      ],
+      "id": "2f5dec53-06fa-47ff-a1fa-209384bfec5a",
+      "name": "Combine Job Data With Projects2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const detailsItems = $input.all();\nconst originalJobs = $('Batch Jobs Processing').all();\n\nreturn detailsItems.map((item, index) => {\n  const jobDetails = item.json;\n  const originalJob = originalJobs[index].json;\n  \n  return {\n    json: {\n      ...originalJob,\n      job_details: jobDetails\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        912
+      ],
+      "id": "9edfc85c-c3a4-4920-a7a5-58f318f5de0f",
+      "name": "Store Job with Details2"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "id": "8bbbb3e1-8b9f-44a1-a842-cafc59201ac1",
+      "name": "Wait Before Costplan1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -736,
+        912
+      ],
+      "webhookId": "f208507a-8015-4a33-bd73-077809315f62"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Create or update a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Create or update a record1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update a record1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Create or update a record": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [
+          {
+            "node": "Create or update a record2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        []
+      ]
+    },
+    "Upsert a contact": {
+      "main": [
+        []
+      ]
+    },
+    "Initialize Chunks3": {
+      "main": [
+        [
+          {
+            "node": "Get Next Chunk3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Next Chunk3": {
+      "main": [
+        [
+          {
+            "node": "Check If Complete3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Complete3": {
+      "main": [
+        [
+          {
+            "node": "Output Projects with Token2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Projects3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Projects3": {
+      "main": [
+        [
+          {
+            "node": "Process Response3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Response3": {
+      "main": [
+        [
+          {
+            "node": "Needs Sub-Chunking?3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Sub-Chunking?3": {
+      "main": [
+        [
+          {
+            "node": "Create Sub-Chunks3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add Projects to Collection3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sub-Chunks3": {
+      "main": [
+        [
+          {
+            "node": "Get Next Chunk3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Projects to Collection3": {
+      "main": [
+        [
+          {
+            "node": "Get Next Chunk3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Projects with Token2": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicate Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron Trigger4": {
+      "main": [
+        [
+          {
+            "node": "Get EasyJob Token4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get EasyJob Token4": {
+      "main": [
+        [
+          {
+            "node": "Store Token4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Token4": {
+      "main": [
+        [
+          {
+            "node": "Initialize Chunks3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Project Details3": {
+      "main": [
+        [
+          {
+            "node": "Extract Company Data3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Company Data3": {
+      "main": [
+        [
+          {
+            "node": "Get Contact Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicate Projects": {
+      "main": [
+        [
+          {
+            "node": "Get Project Details3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch Jobs Processing": {
+      "main": [
+        [
+          {
+            "node": "Combine Job Data With Projects2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Job Details1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact Details": {
+      "main": [
+        [
+          {
+            "node": "Merge Company and Contact Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Company and Contact Data1": {
+      "main": [
+        [
+          {
+            "node": "Extract Jobs from Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Jobs from Project": {
+      "main": [
+        [
+          {
+            "node": "Batch Jobs Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Job Costplan1": {
+      "main": [
+        [
+          {
+            "node": "Merge Job Details and Costplan2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Job Details1": {
+      "main": [
+        [
+          {
+            "node": "Store Job with Details2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Job Details and Costplan2": {
+      "main": [
+        [
+          {
+            "node": "Batch Jobs Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Job with Details2": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Costplan1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Costplan1": {
+      "main": [
+        [
+          {
+            "node": "Get Job Costplan1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Job Data With Projects2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "93b2c687-23d1-44ff-a115-cca38d9bda9e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0e0dd4afc9011baa03e91be45fcf2e4b4ed5ae3ca100515f64a55d48735dad8f"
+  },
+  "id": "6UlXhxMFWHYuDG3I",
+  "tags": []
+}
